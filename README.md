@@ -3,6 +3,8 @@
   <img src="docs/screenshot-light.png" alt="The Sheet docs page: a phone-shaped frame with a live bottom sheet, a ruler showing the projected landing point and a physics readout, beside sliders that tune the spring.">
 </picture>
 
+[![Tests](https://github.com/Murali1801/sheet/actions/workflows/ci.yml/badge.svg)](https://github.com/Murali1801/sheet/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-16150F)](LICENSE)
+
 # Sheet
 
 **A zero-dependency `<bottom-sheet>` Web Component that moves like the one in your phone.** Velocity projection, a real spring, rubber banding and nested scroll, in about 4.1 kB gzipped.
