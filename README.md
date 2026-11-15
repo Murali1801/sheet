@@ -7,7 +7,7 @@
 
 **A zero-dependency `<bottom-sheet>` Web Component that moves like the one in your phone.** Velocity projection, a real spring, rubber banding and nested scroll, in about 4.1 kB gzipped.
 
-Live demo: https://sheet.vercel.app (TODO: not deployed yet). Try it on a phone.
+Live demo: https://sheet-murali.vercel.app. Try it on a phone.
 
 ## Quick start
 

@@ -5,3 +5,5 @@ site-dist
 .DS_Store
 .vite
 coverage
+
+.vercel

@@ -3,7 +3,6 @@ import '../src/bottom-sheet';
 import type { BottomSheet, SheetDragDetail, SheetSnapDetail } from '../src/bottom-sheet';
 import { dampingRatio } from '../src/physics';
 
-/** TODO: replace with the real contact address before launch. */
 
 const $ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => r.querySelector(s) as T;
 const $$ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => [...r.querySelectorAll<T>(s)];
