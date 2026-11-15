@@ -4,7 +4,6 @@ import type { BottomSheet, SheetDragDetail, SheetSnapDetail } from '../src/botto
 import { dampingRatio } from '../src/physics';
 
 /** TODO: replace with the real contact address before launch. */
-const EMAIL = 'hello@example.com';
 
 const $ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => r.querySelector(s) as T;
 const $$ = <T extends Element = HTMLElement>(s: string, r: ParentNode = document) => [...r.querySelectorAll<T>(s)];
@@ -53,7 +52,6 @@ async function copy(text: string, btn: HTMLElement) {
   btn.dataset.t = String(setTimeout(() => (btn.textContent = label), 1400));
 }
 $$<HTMLButtonElement>('[data-copy]').forEach((b) => b.addEventListener('click', () => copy(b.dataset.copy!, b)));
-$('#copy-email').addEventListener('click', (e) => copy(EMAIL, e.currentTarget as HTMLElement));
 
 /* ---------- the demo sheets (stage on wide screens, real modal on phones) ---------- */
 const stage = sheet('stage-sheet');
