@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Sheet: a bottom sheet Web Component with real physics</title>
+    <meta name="description" content="&lt;bottom-sheet&gt; is a zero-dependency Web Component with velocity projection, spring physics, rubber banding and nested scroll. About 4 kB gzipped." />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Onest:wght@400;500;600&family=Schibsted+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <script>
+      try {
+        var t = new URLSearchParams(location.search).get('theme') || localStorage.getItem('sheet-theme');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+    <script type="module" src="/site/main.ts"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="top wrap">
+      <a class="brand" href="#main" aria-label="Sheet, back to top"><span class="mark" aria-hidden="true"></span>Sheet</a>
+      <span class="ver mono">v0.1.0</span>
+      <nav class="nav" aria-label="Sections">
+        <a href="#examples">Examples</a>
+        <a href="#api">API</a>
+        <a href="#physics">Physics</a>
+        <a href="#frameworks">Frameworks</a>
+      </nav>
+      <a class="src mono" href="https://github.com/Murali1801/sheet">source</a>
+      <button class="theme mono" id="theme" type="button" aria-label="Colour theme: system">system</button>
+    </header>
+
+    <main id="main">
+      <section class="hero wrap" aria-labelledby="hero-title">
+        <div class="hero-text">
+          <p class="eyebrow mono"><span class="mark" aria-hidden="true"></span>&lt;bottom-sheet&gt; · Web Component · MIT</p>
+          <h1 id="hero-title">A bottom sheet that moves like the one in your phone.</h1>
+          <p class="lede">
+            Flick it and it lands where the flick was heading. Velocity projection, a real spring, rubber banding and nested
+            scroll in one custom element. No dependencies, <span class="mono" data-size>4.1 kB</span> gzipped.
+          </p>
+
+          <div class="install">
+            <code class="mono">npm i @murali1801/sheet</code>
+            <button class="btn small" type="button" data-copy="npm i @murali1801/sheet">Copy</button>
+          </div>
+
+          <button class="btn primary phone-only" id="open-phone" type="button">Open the sheet</button>
+          <p class="hint stage-only">Drag the yellow grabber. Flick it. Pull it past the top. The readout shows why it lands where it does.</p>
+
+          <div class="tune" id="tune" aria-labelledby="tune-title">
+            <h2 id="tune-title" class="h3">Tune and copy</h2>
+            <p class="small-text">Every change applies to the live sheet and rewrites the tag below.</p>
+            <div class="sliders">
+              <label class="sl"><span>Low detent</span><input type="range" min="10" max="50" step="5" value="25" data-k="low" /><output class="mono" data-o="low">25%</output></label>
+              <label class="sl"><span>Middle detent</span><input type="range" min="30" max="90" step="5" value="60" data-k="mid" /><output class="mono" data-o="mid">60%</output></label>
+              <label class="sl"><span>Top detent</span><input type="range" min="50" max="100" step="5" value="100" data-k="top" /><output class="mono" data-o="top">100%</output></label>
+              <label class="sl"><span>Stiffness</span><input type="range" min="50" max="1000" step="10" value="400" data-k="stiffness" /><output class="mono" data-o="stiffness">400</output></label>
+              <label class="sl"><span>Damping</span><input type="range" min="4" max="100" step="1" value="40" data-k="damping" /><output class="mono" data-o="damping">40</output></label>
+              <label class="sl"><span>Mass</span><input type="range" min="0.2" max="4" step="0.1" value="1" data-k="mass" /><output class="mono" data-o="mass">1.0</output></label>
+            </div>
+            <div class="tune-row">
+              <label class="check"><input type="checkbox" checked data-k="dismissible" /> <span>Dismissible</span></label>
+              <p class="zeta mono" id="zeta" aria-live="polite">ζ 1.00 · critically damped</p>
+            </div>
+            <div class="code-block">
+              <pre class="mono" id="snippet"></pre>
+              <div class="code-actions">
+                <button class="btn small" type="button" id="copy-snippet">Copy</button>
+                <button class="btn small ghost" type="button" id="reset-tune">Reset</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-stage stage-only">
+          <div class="ruler" id="ruler" aria-hidden="true"></div>
+          <div class="stage" id="stage">
+            <div class="stage-lines" id="stage-lines" aria-hidden="true"></div>
+            <div class="stage-page">
+              <p class="mono small-text">A phone-shaped frame. Detents are percentages of its height.</p>
+              <button class="btn" type="button" id="stage-back" hidden>Bring the sheet back</button>
+            </div>
+            <div class="readout mono" id="readout" aria-hidden="true"></div>
+            <bottom-sheet id="stage-sheet" class="in-stage" snap="25% 60% 100%" initial="1" dismissible open label="Demo sheet"></bottom-sheet>
+          </div>
+        </div>
+      </section>
+
+      <section class="section wrap" id="examples" aria-labelledby="ex-title">
+        <div class="section-head">
+          <h2 id="ex-title">Examples</h2>
+          <p>Each one opens a real sheet. On a phone, try them with your thumb.</p>
+        </div>
+        <div class="ex-grid">
+          <article class="ex">
+            <h3>Snap points</h3>
+            <p>Three detents. Tap the grabber to step through them, use the arrow keys on it, or call <code>snapTo()</code>.</p>
+            <pre class="mono">&lt;bottom-sheet modal dismissible
+  snap="25% 60% 100%"&gt;…&lt;/bottom-sheet&gt;</pre>
+            <div class="ex-foot">
+              <button class="btn" type="button" data-open="ex-snap">Open</button>
+              <p class="log mono" id="log-snap" aria-live="polite">sheet-snap: waiting</p>
+            </div>
+          </article>
+
+          <article class="ex">
+            <h3>Nested scroll</h3>
+            <p>At 50% a drag on the list moves the sheet. At 100% the list scrolls, and pulling down from its top brings the sheet down.</p>
+            <pre class="mono">&lt;bottom-sheet modal dismissible snap="50% 100%"&gt;
+  &lt;ul&gt;…a long list…&lt;/ul&gt;
+&lt;/bottom-sheet&gt;</pre>
+            <div class="ex-foot">
+              <button class="btn" type="button" data-open="ex-scroll">Open</button>
+            </div>
+          </article>
+
+          <article class="ex">
+            <h3>Sticky header and footer</h3>
+            <p>The footer rides the visible bottom edge at every detent, so the Save button is always in reach.</p>
+            <pre class="mono">&lt;div slot="header"&gt;…&lt;/div&gt;
+…
+&lt;div slot="footer"&gt;…&lt;/div&gt;</pre>
+            <div class="ex-foot">
+              <button class="btn" type="button" data-open="ex-sticky">Open</button>
+              <p class="log mono" id="log-sticky" aria-live="polite">No changes saved</p>
+            </div>
+          </article>
+
+          <article class="ex">
+            <h3>Form with keyboard</h3>
+            <p>Focus a field on a phone: the sheet lifts above the on-screen keyboard and opens to its top detent.</p>
+            <pre class="mono">&lt;bottom-sheet modal dismissible snap="45% 100%"&gt;
+  &lt;form&gt;…&lt;/form&gt;
+&lt;/bottom-sheet&gt;</pre>
+            <div class="ex-foot">
+              <button class="btn" type="button" data-open="ex-form">New note</button>
+            </div>
+            <ul class="notes" id="notes" aria-label="Saved notes"></ul>
+          </article>
+
+          <article class="ex wide">
+            <div class="ex-wide-text">
+              <h3>Non-modal, map style</h3>
+              <p>No scrim and no focus trap: the map behind stays live. Tap a pin and the sheet rises to show it.</p>
+              <pre class="mono">&lt;bottom-sheet snap="88px 45% 90%" open&gt;</pre>
+            </div>
+            <div class="map" id="map">
+              <svg class="map-svg" viewBox="0 0 900 600" preserveAspectRatio="none" aria-hidden="true" id="map-svg"></svg>
+              <div class="pins" id="pins"></div>
+              <bottom-sheet id="ex-map" class="in-stage" snap="88px 45% 90%" open label="Stops"></bottom-sheet>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section wrap" id="api" aria-labelledby="api-title">
+        <div class="section-head">
+          <h2 id="api-title">API</h2>
+          <p>One tag. Import the module once and use <code>&lt;bottom-sheet&gt;</code> anywhere.</p>
+        </div>
+
+        <div class="api-grid">
+          <div class="table-wrap">
+            <table>
+              <caption>Attributes</caption>
+              <thead><tr><th scope="col">Name</th><th scope="col">Default</th><th scope="col">What it does</th></tr></thead>
+              <tbody>
+                <tr><td><code>snap</code></td><td class="mono">50% 90%</td><td>Detents, any order. <code>60%</code>, <code>320px</code>, a bare px number, or a fraction like <code>0.6</code>.</td></tr>
+                <tr><td><code>open</code></td><td class="mono">off</td><td>Present while open. Add or remove it to open or close.</td></tr>
+                <tr><td><code>initial</code></td><td class="mono">0</td><td>Detent index to open at, lowest is 0.</td></tr>
+                <tr><td><code>stiffness</code></td><td class="mono">400</td><td>Spring stiffness. Higher is snappier.</td></tr>
+                <tr><td><code>damping</code></td><td class="mono">40</td><td>Spring damping. Lower bounces.</td></tr>
+                <tr><td><code>mass</code></td><td class="mono">1</td><td>Spring mass. Higher feels heavier.</td></tr>
+                <tr><td><code>dismissible</code></td><td class="mono">off</td><td>Swipe down, Esc and a scrim tap close the sheet.</td></tr>
+                <tr><td><code>modal</code></td><td class="mono">off</td><td>Opens with <code>dialog.showModal()</code>: top layer, scrim, inert page, focus kept inside. Set before opening.</td></tr>
+                <tr><td><code>backdrop-from</code></td><td class="mono">none</td><td>Detent index (or a value like <code>60%</code>) where the scrim starts. It is full at the next detent. Without it the scrim is full at every detent.</td></tr>
+                <tr><td><code>label</code></td><td class="mono">none</td><td>Accessible name for the dialog.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Methods and properties</caption>
+              <thead><tr><th scope="col">Name</th><th scope="col">What it does</th></tr></thead>
+              <tbody>
+                <tr><td><code>show(index?)</code></td><td>Opens, at <code>index</code> or <code>initial</code>.</td></tr>
+                <tr><td><code>close()</code></td><td>Springs away, then closes the dialog.</td></tr>
+                <tr><td><code>snapTo(i)</code></td><td>Springs to detent <code>i</code>. Opens there if closed.</td></tr>
+                <tr><td><code>open</code></td><td>Boolean, read and write.</td></tr>
+                <tr><td><code>index</code></td><td>Current or target detent.</td></tr>
+                <tr><td><code>detents</code></td><td>Detent heights in px, lowest first.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Events (bubble, composed)</caption>
+              <thead><tr><th scope="col">Event</th><th scope="col">detail</th></tr></thead>
+              <tbody>
+                <tr><td><code>sheet-open</code></td><td class="mono">{ index }</td></tr>
+                <tr><td><code>sheet-snap</code></td><td class="mono">{ index, height }</td></tr>
+                <tr><td><code>sheet-drag</code></td><td class="mono">{ phase, height, velocity, projected, index, container }</td></tr>
+                <tr><td><code>sheet-close</code></td><td class="mono">{ reason: swipe | escape | scrim | method }</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <caption>Styling</caption>
+              <thead><tr><th scope="col">Hook</th><th scope="col">Use</th></tr></thead>
+              <tbody>
+                <tr><td><code>--sheet-bg</code>, <code>--sheet-color</code></td><td>Surface and text.</td></tr>
+                <tr><td><code>--sheet-radius</code>, <code>--sheet-shadow</code></td><td>Top corners and edge.</td></tr>
+                <tr><td><code>--sheet-scrim</code></td><td>Scrim colour (modal).</td></tr>
+                <tr><td><code>--sheet-handle</code>, <code>--sheet-focus</code></td><td>Grabber and its focus ring.</td></tr>
+                <tr><td><code>--sheet-max-width</code></td><td>Centred width on wide screens, 640px.</td></tr>
+                <tr><td><code>--sheet-z</code>, <code>--sheet-grip-height</code></td><td>Stacking, grabber row height.</td></tr>
+                <tr><td><code>::part()</code></td><td class="mono">panel handle grip scrim header content footer</td></tr>
+                <tr><td>Slots</td><td><code>header</code>, default, <code>footer</code> (sticky)</td></tr>
+                <tr><td><code>data-no-drag</code></td><td>Put it on an element that must never start a drag. Inputs never do.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="section wrap" id="physics" aria-labelledby="phys-title">
+        <div class="section-head">
+          <h2 id="phys-title">How the physics works</h2>
+          <p>The same rules iOS uses, in about 100 lines of pure functions with unit tests.</p>
+        </div>
+        <ol class="rules">
+          <li><h3>Velocity</h3><p>Pointer events with capture. Only the last 100 ms of samples count, so a finger that rests before lifting does not fling.</p></li>
+          <li><h3>Projection</h3><p class="mono formula">lands = y + v · d / (1 - d), d = 0.998/ms</p><p>A 1 px/ms flick travels 499 px. The sheet goes to the detent nearest that point, not the one you let go next to.</p></li>
+          <li><h3>Dismiss</h3><p>A downward flick over 0.5 px/ms from the lowest detent, or a projection that ends below half the lowest detent. Higher up, a flick lands on a lower detent instead.</p></li>
+          <li><h3>Rubber band</h3><p class="mono formula">offset = (1 - 1 / (x · 0.55 / dim + 1)) · dim</p><p>Past the top, the sheet follows less the further you pull, and never more than the screen height.</p></li>
+          <li><h3>Spring</h3><p>Semi-implicit Euler in 240 Hz sub-steps on each frame. Stiffness 400, damping 40, mass 1 is critically damped. Release velocity seeds the spring, so there is no seam.</p></li>
+          <li><h3>Nested scroll</h3><p>Below the top detent, content drags move the sheet. At the top, the content scrolls, unless it is at <code>scrollTop</code> 0 and the finger moves down.</p></li>
+          <li><h3>Keyboard</h3><p><code>visualViewport</code> tells the sheet where the keyboard starts. It lifts above it and opens fully when a field inside has focus.</p></li>
+          <li><h3>Motion and access</h3><p>Transforms only, no layout reads per frame. Reduced motion makes every snap instant. Modal sheets use <code>showModal()</code> for focus and Esc; the grabber is a button.</p></li>
+        </ol>
+      </section>
+
+      <section class="section wrap" id="frameworks" aria-labelledby="fw-title">
+        <div class="section-head">
+          <h2 id="fw-title">Use it anywhere</h2>
+          <p>It is a standard custom element, so every framework renders it as a tag.</p>
+        </div>
+        <div class="table-wrap">
+          <table class="fw">
+            <thead><tr><th scope="col">Framework</th><th scope="col">Setup</th><th scope="col">Listening to events</th></tr></thead>
+            <tbody>
+              <tr>
+                <th scope="row">HTML</th>
+                <td><pre class="mono">&lt;script type="module"
+  src="https://esm.sh/@murali1801/sheet"&gt;&lt;/script&gt;
+&lt;bottom-sheet snap="40% 100%"&gt;…&lt;/bottom-sheet&gt;</pre></td>
+                <td><pre class="mono">sheet.addEventListener('sheet-snap',
+  (e) =&gt; console.log(e.detail.index))</pre></td>
+              </tr>
+              <tr>
+                <th scope="row">React 19</th>
+                <td><pre class="mono">import '@murali1801/sheet'
+
+&lt;bottom-sheet ref={ref} modal dismissible
+  snap="40% 100%"&gt;…&lt;/bottom-sheet&gt;</pre></td>
+                <td><pre class="mono">useEffect(() =&gt; {
+  const el = ref.current
+  el.addEventListener('sheet-close', onClose)
+  return () =&gt; el.removeEventListener('sheet-close', onClose)
+}, [])</pre></td>
+              </tr>
+              <tr>
+                <th scope="row">Vue 3</th>
+                <td><pre class="mono">// vite.config: vue({ template: { compilerOptions: {
+//   isCustomElement: (t) =&gt; t === 'bottom-sheet' } } })
+import '@murali1801/sheet'</pre></td>
+                <td><pre class="mono">&lt;bottom-sheet @sheet-snap="onSnap"
+  snap="40% 100%"&gt;…&lt;/bottom-sheet&gt;</pre></td>
+              </tr>
+              <tr>
+                <th scope="row">Svelte 5</th>
+                <td><pre class="mono">&lt;script&gt;
+  import '@murali1801/sheet'
+  let sheet
+&lt;/script&gt;</pre></td>
+                <td><pre class="mono">&lt;bottom-sheet bind:this={sheet}
+  onsheet-snap={(e) =&gt; (i = e.detail.index)}&gt;</pre></td>
+              </tr>
+              <tr>
+                <th scope="row">Astro</th>
+                <td><pre class="mono">&lt;bottom-sheet snap="40% 100%"&gt;…&lt;/bottom-sheet&gt;
+&lt;script&gt;import '@murali1801/sheet'&lt;/script&gt;</pre></td>
+                <td><pre class="mono">&lt;script&gt;
+  document.querySelector('bottom-sheet')
+    .addEventListener('sheet-open', …)
+&lt;/script&gt;</pre></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot wrap">
+      <p class="sig mono"><span class="mark" aria-hidden="true"></span> Murali · github.com/Murali1801</p>
+      <div class="foot-links">
+        <a href="https://github.com/Murali1801">GitHub</a>
+        <button class="linkish" type="button" id="copy-email">Copy email</button>
+        <a href="https://github.com/Murali1801/sheet">source</a>
+      </div>
+      <p class="set small-text">Part of a set of tools by Murali: Tonal · Sheet · Tab · Masthead</p>
+    </footer>
+
+    <!-- Phone hero sheet: the real thing over the page. -->
+    <bottom-sheet id="phone-sheet" modal dismissible snap="25% 60% 100%" initial="1" label="Demo sheet"></bottom-sheet>
+    <div id="phone-readout" class="phone-readout" popover="manual" aria-hidden="true"></div>
+
+    <bottom-sheet id="ex-snap" modal dismissible snap="25% 60% 100%" label="Snap points">
+      <div slot="header" class="sh-head">
+        <h3>Snap points</h3>
+        <span class="mono small-text" id="snap-state">detent 0</span>
+      </div>
+      <div class="sh-body">
+        <div class="chips" role="group" aria-label="Go to detent">
+          <button class="chip" type="button" data-snap="0">25%</button>
+          <button class="chip" type="button" data-snap="1">60%</button>
+          <button class="chip" type="button" data-snap="2">100%</button>
+        </div>
+        <p>Each button calls <code>snapTo(i)</code>. The card behind logs every <code>sheet-snap</code> event.</p>
+        <p>Drag down from the lowest detent, press Esc, or tap the dimmed page to close.</p>
+      </div>
+    </bottom-sheet>
+
+    <bottom-sheet id="ex-scroll" modal dismissible snap="50% 100%" label="HTML elements">
+      <div slot="header" class="sh-head">
+        <h3>HTML elements</h3>
+        <span class="mono small-text" id="el-count"></span>
+      </div>
+      <ul class="el-list" id="el-list"></ul>
+    </bottom-sheet>
+
+    <bottom-sheet id="ex-sticky" modal dismissible snap="45% 100%" label="Notifications">
+      <div slot="header" class="sh-head bar">
+        <h3>Notifications</h3>
+        <button class="btn small ghost" type="button" id="notif-reset">Reset</button>
+      </div>
+      <ul class="toggles" id="toggles"></ul>
+      <div slot="footer" class="sh-foot">
+        <span class="mono small-text" id="notif-count">No changes</span>
+        <button class="btn primary" type="button" id="notif-save">Save</button>
+      </div>
+    </bottom-sheet>
+
+    <bottom-sheet id="ex-form" modal dismissible snap="45% 100%" label="New note">
+      <div slot="header" class="sh-head"><h3>New note</h3></div>
+      <form class="note-form" id="note-form" novalidate>
+        <label for="note-title">Title</label>
+        <input id="note-title" name="title" type="text" autocomplete="off" required maxlength="60" aria-describedby="note-err" />
+        <p class="err small-text" id="note-err" aria-live="polite"></p>
+        <label for="note-body">Note</label>
+        <textarea id="note-body" name="body" rows="4" maxlength="400"></textarea>
+      </form>
+      <div slot="footer" class="sh-foot">
+        <button class="btn ghost" type="button" id="note-cancel">Cancel</button>
+        <button class="btn primary" type="submit" form="note-form">Save note</button>
+      </div>
+    </bottom-sheet>
+  </body>
+</html>
